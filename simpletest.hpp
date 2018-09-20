@@ -1,20 +1,19 @@
-/** @file tests/cstest/cstest.hpp
- * @brief CloudSync testing framework.
+/** @file simpletest.hpp
+ * @brief simpletest include
  * @copyright Copyright (c) 2018 Jonathan Lemos
  *
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
  */
 
-#ifndef __CS_CSTEST_HPP
-#define __CS_CSTEST_HPP
+#ifndef __SIMPLETEST_HPP
+#define __SIMPLETEST_HPP
 
-#include "cstest_iocapturer.hpp"
+#include "simpletest_iocapturer.hpp"
 #include <vector>
 #include <stdexcept>
 
-namespace CloudSync{
-namespace Testing{
+namespace simpletest{
 
 /**
  * @brief Do not throw this exception directly. Use the ASSERT() macro instead.
@@ -22,6 +21,11 @@ namespace Testing{
  */
 class FailedAssertion : public std::runtime_error{
 public:
+	/**
+	 * @brief Constructs a FailedAssertion exception.
+	 *
+	 * @param assertion A string representation of the assertion that failed.
+	 */
 	FailedAssertion(const char* assertion);
 };
 
@@ -36,7 +40,7 @@ public:
 	/* silences __iocapt unused warning */\
 	(void)__iocapt;\
 	if (!(assertion)){\
-		throw CloudSync::Testing::FailedAssertion(#assertion);\
+		throw simpletest::FailedAssertion(#assertion);\
 	}\
 	/* The following line makes sure a semicolon is required. */ \
 	(void)0
@@ -47,6 +51,12 @@ public:
  */
 class FailedExpectation : public std::runtime_error{
 public:
+	/**
+	 * @brief Constructs a FailedExpectation exception.
+	 *
+	 * @param expected The expected output on stdout.
+	 * @param actual   The actual output on stdout.
+	 */
 	FailedExpectation(const char* expected, const char* actual);
 };
 
@@ -58,9 +68,15 @@ public:
  * @exception FailedExpectation Thrown if the last line on stdout/stderr does not match the expectation.
  */
 #define EXPECT(expectation)\
-	__expect(expectation, __iocapt)
+	simpletest::__expect(expectation, __iocapt)
 
-void __expect(const char* str, CloudSync::Testing::IOCapturer& __iocapt);
+/**
+ * @brief Do not call this function directly. Use the EXPECT() macro instead.
+ *
+ * @param str      The string to expect.
+ * @param __iocapt The current I/O capturer object.
+ */
+void __expect(const char* str, simpletest::IOCapturer& __iocapt);
 
 /**
  * @brief Sends a line to stdin.
@@ -80,7 +96,7 @@ void __expect(const char* str, CloudSync::Testing::IOCapturer& __iocapt);
  * @param test The test to register.
  * @param name The name of the test.
  */
-void __registertest(void(*test)(CloudSync::Testing::IOCapturer& __iocapt), const char* name);
+void __registertest(void(*test)(simpletest::IOCapturer& __iocapt), const char* name);
 
 /**
  * @brief Do not instantiate this class directly. Use the UNIT_TEST macro.
@@ -94,7 +110,7 @@ public:
 	 * @param test The test to register.
 	 * @param name The name of the test.
 	 */
-	__registerdummy(void(*test)(CloudSync::Testing::IOCapturer& __iocapt), const char* name){
+	__registerdummy(void(*test)(simpletest::IOCapturer& __iocapt), const char* name){
 		__registertest(test, name);
 	}
 };
@@ -110,8 +126,11 @@ public:
  * Tests can be run with the EXECUTE_TESTS() macro.
  */
 #define UNIT_TEST(str)\
-	void str(CloudSync::Testing::IOCapturer& __iocapt);\
+	/* declare the function so it is visible in the following line */\
+	void str(simpletest::IOCapturer& __iocapt);\
+	/* now register the test by instantiating a __registerdummy */\
 	CloudSync::Testing::__registerdummy __##str(str, #str);\
+	/* finally define the function prototype so the unit test can be defined */\
 	void str(CloudSync::Testing::IOCapturer& __iocapt)
 
 /**
@@ -184,7 +203,6 @@ private:
  */
 #define SET_CLEANUP(lambda) __cleanupdummy __cld(lambda); (void)__cld
 
-}
 }
 
 #endif

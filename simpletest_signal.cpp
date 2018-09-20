@@ -6,16 +6,14 @@
  * of the MIT license.  See the LICENSE file for details.
  */
 
+#include "simpletest_signal.hpp"
 #include <signal.h>
 #include <setjmp.h>
 #include <unistd.h>
 #include <iostream>
 #include <cstdlib>
 
-#include "cstest_signal.hpp"
-
-namespace CloudSync{
-namespace Testing{
+namespace simpletest{
 
 jmp_buf __signalhandler::s_jmpbuf;
 volatile sig_atomic_t __signalhandler::s_signo;
@@ -88,5 +86,4 @@ void defaultHandler(sig_atomic_t signo){
 	}
 }
 
-}
 }

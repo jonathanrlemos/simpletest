@@ -1,13 +1,13 @@
-/** @file tests/cstest/cstest.cpp
- * @brief CloudSync testing framework.
+/** @file simpletest.cpp
+ * @brief simpletest main file.
  * @copyright Copyright (c) 2018 Jonathan Lemos
  *
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
  */
 
-#include "cstest.hpp"
-#include "cstest_signal.hpp"
+#include "simpletest.hpp"
+#include "simpletest_signal.hpp"
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
@@ -19,8 +19,7 @@
 #include <signal.h>
 #include <setjmp.h>
 
-namespace CloudSync{
-namespace Testing{
+namespace simpletest{
 
 FailedAssertion::FailedAssertion(const char* assertion): std::runtime_error(assertion) {
 }
@@ -171,5 +170,4 @@ int __executetests(int argc, char** argv){
 	return __failvec.size();
 }
 
-}
 }

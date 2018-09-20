@@ -1,5 +1,5 @@
-/** @file tests/cstest/cstest_iocapturer.hpp
- * @brief CloudSync testing framework I/O Capturer.
+/** @file simpletest_iocapturer.hpp
+ * @brief simpletest I/O capturer.
  * @copyright Copyright (c) 2018 Jonathan Lemos
  *
  * This software may be modified and distributed under the terms
@@ -9,13 +9,12 @@
 #ifndef __CS_CSTEST_IOCAPTURER_HPP
 #define __CS_CSTEST_IOCAPTURER_HPP
 
-#include "../../attribute.hpp"
+#include "attribute.hpp"
 #include <memory>
 #include <string>
 #include <cstdarg>
 
-namespace CloudSync{
-namespace Testing{
+namespace simpletest{
 
 struct IOCapturerImpl;
 
@@ -63,14 +62,13 @@ public:
 	 *
 	 * @return The number of characters successfully written.
 	 */
-	int CS_PRINTF_LIKE(1) printToScreen(const char* format, ...);
+	int AT_PRINTF_LIKE(1) printToScreen(const char* format, ...);
 
 private:
 	static int instanceCount;
 	std::unique_ptr<IOCapturerImpl> impl;
 };
 
-}
 }
 
 #endif

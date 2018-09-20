@@ -1,22 +1,20 @@
-/** @file tests/cstest/cstest_ext.hpp
- * @brief CloudSync testing framework extended functions.
+/** @file simpletest_ext.hpp
+ * @brief simpletest extended functions
  * @copyright Copyright (c) 2018 Jonathan Lemos
  *
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
  */
 
-#ifndef __CSTEST_EXT_HPP
-#define __CSTEST_EXT_HPP
+#ifndef __SIMPLETEST_EXT_HPP
+#define __SIMPLETEST_EXT_HPP
 
-#include "../../attribute.hpp"
 #include <cstddef>
 #include <vector>
 #include <string>
 #include <memory>
 
-namespace CloudSync{
-namespace Testing{
+namespace simpletest{
 
 /**
  * @brief Creates a file with the specified data.
@@ -169,8 +167,6 @@ void fillMemory(void* mem, size_t len);
  * The same seed will always generate the same sequence.
  */
 void fillMemory(void* mem, size_t len, unsigned seed);
-
-}
 
 std::string CS_CONST __makepath(std::vector<std::string> components);
 #define MAKE_PATH(...) __makepath({__VA_ARGS__})

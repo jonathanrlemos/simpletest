@@ -6,7 +6,7 @@
  * of the MIT license.  See the LICENSE file for details.
  */
 
-#include "cstest_iocapturer.hpp"
+#include "simpletest_iocapturer.hpp"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -18,8 +18,7 @@
 #define P_READ  (0)
 #define P_WRITE (1)
 
-namespace CloudSync{
-namespace Testing{
+namespace simpletest{
 
 int IOCapturer::instanceCount = 0;
 
@@ -165,5 +164,4 @@ IOCapturer::~IOCapturer(){
 	dup2(impl->stdinOld,  STDIN_FILENO);
 }
 
-}
 }

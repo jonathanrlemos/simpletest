@@ -1,18 +1,18 @@
-/** @file tests/cstest/cstest_ext.cpp
- * @brief CloudSync testing framework extended functions.
+/** @file simpletest_ext.cpp
+ * @brief simpletest extended functions.
  * @copyright Copyright (c) 2018 Jonathan Lemos
  *
  * This software may be modified and distributed under the terms
  * of the MIT license.  See the LICENSE file for details.
  */
 
-#include "cstest_ext.hpp"
+#include "simpletest_ext.hpp"
 #include <fstream>
 #include <cstring>
 #include <cerrno>
 #include <sys/stat.h>
 
-namespace CloudSync::Testing{
+namespace simpletest{
 
 void createFile(const char* path, void* mem, size_t memLen){
 	std::ofstream ofs;
