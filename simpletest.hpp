@@ -10,6 +10,7 @@
 #define __SIMPLETEST_HPP
 
 #include "simpletest_iocapturer.hpp"
+#include "simpletest_signal.hpp"
 #include <vector>
 #include <stdexcept>
 
@@ -96,7 +97,7 @@ void __expect(const char* str, simpletest::IOCapturer& __iocapt);
  * @param test The test to register.
  * @param name The name of the test.
  */
-void __registertest(void(*test)(simpletest::IOCapturer& __iocapt), const char* name);
+void __registertest(void(*test)(simpletest::IOCapturer&, simpletest::SignalHandler&), const char* name);
 
 /**
  * @brief Do not instantiate this class directly. Use the UNIT_TEST macro.
@@ -110,7 +111,7 @@ public:
 	 * @param test The test to register.
 	 * @param name The name of the test.
 	 */
-	__registerdummy(void(*test)(simpletest::IOCapturer& __iocapt), const char* name){
+	__registerdummy(void(*test)(simpletest::IOCapturer&, simpletest::SignalHandler&), const char* name){
 		__registertest(test, name);
 	}
 };
@@ -129,9 +130,9 @@ public:
 	/* declare the function so it is visible in the following line */\
 	void str(simpletest::IOCapturer& __iocapt);\
 	/* now register the test by instantiating a __registerdummy */\
-	CloudSync::Testing::__registerdummy __##str(str, #str);\
+	simpletest::__registerdummy __##str(str, #str);\
 	/* finally define the function prototype so the unit test can be defined */\
-	void str(CloudSync::Testing::IOCapturer& __iocapt)
+	void str(simpletest::IOCapturer& __iocapt, simpletest::SignalHandler& __sighand)
 
 /**
  * @brief Do not call this function directly. Use the EXECUTE_TESTS macro.

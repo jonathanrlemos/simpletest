@@ -16,20 +16,52 @@
 namespace simpletest{
 
 /**
- * @brief This singleton globally manages signal handling.
- * All operations in this class are thread-safe.
+ * @brief An exception that indicates a signal was thrown.
+ */
+class SignalException : public std::runtime_error{
+public:
+	/**
+	 * @brief Constructs a SignalException.
+	 *
+	 * @param signo The signal code.
+	 */
+	SignalException(sig_atomic_t signo);
+
+	/**
+	 * @brief Gets the signal code of this exception.
+	 */
+	sig_atomic_t getSignal();
+
+private:
+	/**
+	 * @brief The last signal code.
+	 */
+	sig_atomic_t signo;
+};
+
+/**
+ * @brief This class handles signals while it is active.
+ * Only one SignalHandler can be active in a thread at once.
  */
 class SignalHandler{
 public:
 	/**
-	 * @brief Gets the global instance of the signal handler.
+	 * @brief Instantiates a signal handler.
+	 * Upon creation, this class will begin capturing SIGINT, SIGABRT, SIGSEGV, and SIGTERM.
+	 *
+	 * @exception std::logic_error A signal handler has already been instantiated in this thread.
 	 */
-	static SignalHandler& getInstance();
+	SignalHandler();
+
+	/**
+	 * @brief Stops capturing signals.
+	 */
+	~SignalHandler();
 
 	/**
 	 * @brief Gets the last signal thrown as an integer.
 	 *
-	 * @return 0 for no signal, SIG* for any of the other signals. The following is a list of some of the most common signals. See "man 7 signal" for a complete list.
+	 * @return 0 for no signal, SIG* for any of the other signals. The following is a list of signals caught. Any signal not on this list will have its default behavior.
 	 * <br>
 	 * <pre>
 	 * 0       No signal
@@ -39,40 +71,49 @@ public:
 	 * SIGTERM Default termination signal.
 	 * </pre>
 	 * <br>
-	 * Note that SIGKILL cannot be caught.
 	 */
-	sig_atomic_t getLastSignal();
+	sig_atomic_t lastSignal();
 
 	/**
-	 * @brief Gets a string representation of the last signal thrown.
+	 * @brief Gets a string representation of a signal.
 	 */
-	const char* getLastSignalString();
+	static const char* signalToString(sig_atomic_t signo);
 
-	/* Delete the copy constructor and = operator since we do not want the singleton assigned to a variable, since it will be destructed. */
-	SignalHandler(const SignalHandler&) = delete;
-	void operator=(const SignalHandler&)  = delete;
+	/**
+	 * @brief Do not call directly. Use the SignalHandlerSetJmp() macro instead.
+	 * Gets a reference to the jump buffer for use with the SignalHandlerSetJmp() macro.
+	 */
+	jmp_buf& getBuf();
+
+	/**
+	 * @brief Do not call this function directly. Use the SignalHandlerSetJmp() macro instead.
+	 * True if the function should exit (a signal was called that should terminate the program.
+	 */
+	bool shouldExit();
+
 private:
+
 	/**
-	 * @brief Private constructor so the SignalHandler class can't be instantiated.
-	 * Use getInstance() to get a reference to the SignalHandler's singleton.
+	 * @brief Stores the signal number.
 	 */
-	SignalHandler();
-	jmp_buf s_jmpbuf;
-	std::mutex mutex_jmpbuf;
 	volatile sig_atomic_t s_signo = 0;
 };
 
 /**
- * @brief Define a signal handler like below:<br>
- * ```C++
- * signalHandler{
- *     //your code here
- * }
- * ```
- * <br>
- * When a signal is thrown, execution will begin at the top of this block and continue until the end of the function it is in.
+ * @brief Activates the signal handler, throwing an exception if a signal is thrown.
+ * This allows RAII cleanup to occur when a signal is thrown.
  */
-#define signalHandler __signalhandler __sighand; if (setjmp(__signalhandler::s_jmpbuf))
+#define ActivateSignalHandler(handler)\
+	if (setjmp(handler.getBuf())){\
+		if (handler.shouldExit()){\
+			std::cerr << "Terminating program (" << SignalHandler::signalToString(handler.lastSignal) << ")" << std::endl;\
+			std::exit(1);\
+		}\
+		throw simpletest::SignalException(handler.lastSignal());\
+	}\
+	/* requires the statement to have a semicolon at the end. */\
+	(void)0
+
 
 }
 
