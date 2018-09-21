@@ -40,6 +40,8 @@ public:
 #define ASSERT(assertion)\
 	/* silences __iocapt unused warning */\
 	(void)__iocapt;\
+	/* activates the signal handler if it wasn't already activated through THROW_INSTANTLY_ON_SIGNAL() */\
+	ActivateSignalHandler(__sighand);\
 	if (!(assertion)){\
 		throw simpletest::FailedAssertion(#assertion);\
 	}\
@@ -69,6 +71,8 @@ public:
  * @exception FailedExpectation Thrown if the last line on stdout/stderr does not match the expectation.
  */
 #define EXPECT(expectation)\
+	/* activates the signal handler if it wasn't already activated through THROW_INSTANTLY_ON_SIGNAL() */\
+	ActivateSignalHandler(__sighand);\
 	simpletest::__expect(expectation, __iocapt)
 
 /**
@@ -88,6 +92,8 @@ void __expect(const char* str, simpletest::IOCapturer& __iocapt);
  * @param line The line to send.
  */
 #define SEND(line)\
+	/* activates the signal handler if it wasn't already activated through THROW_INSTANTLY_ON_SIGNAL() */\
+	ActivateSignalHandler(__sighand);\
 	__iocapt.sendToStdin(line)
 
 /**
@@ -128,11 +134,20 @@ public:
  */
 #define UNIT_TEST(str)\
 	/* declare the function so it is visible in the following line */\
-	void str(simpletest::IOCapturer& __iocapt);\
+	void str(simpletest::IOCapturer& __iocapt, simpletest::SignalHandler& __sighand);\
 	/* now register the test by instantiating a __registerdummy */\
 	simpletest::__registerdummy __##str(str, #str);\
 	/* finally define the function prototype so the unit test can be defined */\
 	void str(simpletest::IOCapturer& __iocapt, simpletest::SignalHandler& __sighand)
+
+/**
+ * @brief Throws an exception instantly when a signal is thrown.
+ * ASSERT(), EXPECT(), SEND(), TEST_PRINTF(), and SET_CLEANUP() automatically call this, so it is only necessary if the signal-throwing code is called before any of these.
+ */
+#define THROW_INSTANTLY_ON_SIGNAL()\
+	/* silences __iocapt unused warning */\
+	(void)__iocapt;\
+	ActivateSignalHandler(__sighand)
 
 /**
  * @brief Do not call this function directly. Use the EXECUTE_TESTS macro.
@@ -154,7 +169,7 @@ int __executetests(int argc, char** argv);
  *
  * @return The number of tests that failed.
  */
-#define EXECUTE_TESTS() CloudSync::Testing::__executetests(argc, argv)
+#define EXECUTE_TESTS() simpletest::__executetests(argc, argv)
 
 /**
  * @brief By default, all screen output is captured for use with the EXPECT() macro.
@@ -164,7 +179,12 @@ int __executetests(int argc, char** argv);
  *
  * @return The number of characters successfully written.
  */
-#define TEST_PRINTF(...) __iocapt.printToScreen(__VA_ARGS__)
+#define TEST_PRINTF(...)\
+	/* silences __iocapt unused warning */\
+	(void)__iocapt;\
+	/* activates the signal handler if it wasn't already activated through THROW_INSTANTLY_ON_SIGNAL() */\
+	ActivateSignalHandler(__sighand);\
+	__iocapt.printToScreen(__VA_ARGS__)
 
 /**
  * @brief A dummy class used for cleanup purposes.
@@ -202,7 +222,14 @@ private:
  * <br>
  * This only needs to be used for objects that cannot be cleaned up through RAII.
  */
-#define SET_CLEANUP(lambda) __cleanupdummy __cld(lambda); (void)__cld
+#define SET_CLEANUP(lambda)\
+	/* silences __iocapt unused warning */\
+	(void)__iocapt;\
+	/* activates the signal handler if it wasn't already activated through THROW_INSTANTLY_ON_SIGNAL() */\
+	ActivateSignalHandler(__sighand);\
+	__cleanupdummy __cld(lambda);\
+	/* requires semicolon */\
+	(void)__cld
 
 }
 

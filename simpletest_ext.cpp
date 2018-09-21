@@ -133,6 +133,11 @@ struct TestEnvironment::TestEnvironmentImpl{
 
 TestEnvironment::TestEnvironment(): impl(std::make_unique<TestEnvironmentImpl>()){}
 
+/* TODO: implement */
+TestEnvironment::~TestEnvironment(){
+
+}
+
 TestEnvironment::TestEnvironment(TestEnvironment& other){
 	swap(*this, other);
 }
@@ -179,6 +184,8 @@ TestEnvironment setupFullEnvironment(const char* basePath){
 	if (mkdir(MAKE_PATH(basePath, "dir1").c_str(), 0755) != 0){
 		throw std::runtime_error("Failed to create directory " + MAKE_PATH(basePath, "dir1") + '(' + std::strerror(errno) + ')');
 	}
+
+	return te;
 }
 
 }

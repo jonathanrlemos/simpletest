@@ -9,6 +9,7 @@
 #ifndef __SIMPLETEST_EXT_HPP
 #define __SIMPLETEST_EXT_HPP
 
+#include "attribute.hpp"
 #include <cstddef>
 #include <vector>
 #include <string>
@@ -168,7 +169,7 @@ void fillMemory(void* mem, size_t len);
  */
 void fillMemory(void* mem, size_t len, unsigned seed);
 
-std::string CS_CONST __makepath(std::vector<std::string> components);
+std::string AT_CONST __makepath(std::vector<std::string> components);
 #define MAKE_PATH(...) __makepath({__VA_ARGS__})
 
 }

@@ -28,7 +28,7 @@ FailedExpectation::FailedExpectation(const char* expected, const char* actual): 
 }
 
 template <typename T>
-static T CS_CONST nDigits(T x){
+static T AT_CONST nDigits(T x){
 	T val = 1;
 	T ctr = 0;
 	while (val <= x){
@@ -77,8 +77,8 @@ static void printResults(size_t __testvec_size, std::vector<std::tuple<size_t, c
  * @brief Returns the test vector.
  * This function is needed so the test vector is initialized before any __registertest() functions are called.
  */
-static std::vector<std::pair<void(*)(IOCapturer& __iocapt), const char*>>& __gettestvec(){
-	static std::vector<std::pair<void(*)(IOCapturer&), const char*>> __testvec;
+static std::vector<std::pair<void(*)(IOCapturer&, SignalHandler&), const char*>>& __gettestvec(){
+	static std::vector<std::pair<void(*)(IOCapturer&, SignalHandler&), const char*>> __testvec;
 	return __testvec;
 }
 
@@ -89,16 +89,15 @@ void __expect(const char* str, IOCapturer& __iocapt){
 	}
 }
 
-void __registertest(void(*test)(IOCapturer&), const char* name){
+void __registertest(void(*test)(IOCapturer&, SignalHandler&), const char* name){
 	__gettestvec().push_back(std::make_pair(test, name));
 }
 
 /* i love c++ */
-static std::vector<std::tuple<size_t, const char*, std::string>> runTests(std::vector<std::pair<void(*)(IOCapturer&), const char*>>& __testvec){
+static std::vector<std::tuple<size_t, const char*, std::string>> runTests(std::vector<std::pair<void(*)(IOCapturer&, SignalHandler&), const char*>>& __testvec){
 	size_t i = 0;
 	size_t maxLen = 0;
 	std::vector<std::tuple<size_t, const char*, std::string>> __failvec;
-	std::optional<IOCapturer> __iocapt = std::nullopt;
 
 	if (__testvec.size() == 0){
 		return {};
@@ -111,16 +110,6 @@ static std::vector<std::tuple<size_t, const char*, std::string>> runTests(std::v
 		}
 	});
 
-	// Setup our signal handler
-	signalHandler{
-		__iocapt.reset();
-		defaultHandler(getLastSignal());
-		// If the program does not exit.
-		__failvec.push_back(std::make_tuple(i, __testvec[i].second, std::string("Crashed: ") + signalToString(getLastSignal())));
-		std::cout << "Crashed (" << signalToString(getLastSignal()) << ")" << std::endl;
-		i++;
-	}
-
 	for (; i < __testvec.size(); ++i){
 		std::cout << "Test " << std::left << std::setw(nDigits(__testvec.size())) << i + 1 << " (" << __testvec[i].second << ")";
 		for (size_t j = 0; j < maxLen - std::strlen(__testvec[i].second) + 3; ++j){
@@ -128,26 +117,32 @@ static std::vector<std::tuple<size_t, const char*, std::string>> runTests(std::v
 		}
 
 		try{
-			__iocapt.emplace();
-			__testvec[i].first(__iocapt.value());
-			__iocapt.reset();
-
+			{
+				IOCapturer __iocapt;
+				SignalHandler __sighand;
+				__testvec[i].first(__iocapt, __sighand);
+			}
 			std::cout << "Passed";
 		}
 		catch (FailedAssertion& e){
-			__iocapt.reset();
 			__failvec.push_back(std::make_tuple(i, __testvec[i].second, e.what()));
 			std::cout << "Failed (" << e.what() << ")";
 		}
 		catch (FailedExpectation& e){
-			__iocapt.reset();
 			__failvec.push_back(std::make_tuple(i, __testvec[i].second, e.what()));
 			std::cout << "Failed (" << e.what() << ")";
 		}
+		catch (SignalException& e){
+			__failvec.push_back(std::make_tuple(i, __testvec[i].second, std::string("Signal thrown: ") + e.what()));
+			std::cout << "Signal thrown (" << e.what() << ")";
+		}
 		catch (std::exception& e){
-			__iocapt.reset();
-			__failvec.push_back(std::make_tuple(i, __testvec[i].second, std::string("Internal error :") + e.what()));
+			__failvec.push_back(std::make_tuple(i, __testvec[i].second, std::string("Internal error: ") + e.what()));
 			std::cout << "Internal error (" << e.what() << ")";
+		}
+		catch (...){
+			__failvec.push_back(std::make_tuple(i, __testvec[i].second, std::string("Unknown internal error")));
+			std::cout << "Unknown internal error";
 		}
 		std::cout << std::endl;
 	}
@@ -156,7 +151,7 @@ static std::vector<std::tuple<size_t, const char*, std::string>> runTests(std::v
 }
 
 int __executetests(int argc, char** argv){
-	std::vector<std::pair<void(*)(IOCapturer&), const char*>>& __testvec = __gettestvec();
+	std::vector<std::pair<void(*)(IOCapturer&, SignalHandler&), const char*>>& __testvec = __gettestvec();
 	std::vector<std::tuple<size_t, const char*, std::string>> __failvec;
 	std::optional<IOCapturer> __iocapt = std::nullopt;
 

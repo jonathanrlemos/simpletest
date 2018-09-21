@@ -72,7 +72,7 @@ public:
 	 * </pre>
 	 * <br>
 	 */
-	sig_atomic_t lastSignal();
+	static sig_atomic_t lastSignal();
 
 	/**
 	 * @brief Gets a string representation of a signal.
@@ -83,20 +83,13 @@ public:
 	 * @brief Do not call directly. Use the SignalHandlerSetJmp() macro instead.
 	 * Gets a reference to the jump buffer for use with the SignalHandlerSetJmp() macro.
 	 */
-	jmp_buf& getBuf();
+	static jmp_buf& getBuf();
 
 	/**
 	 * @brief Do not call this function directly. Use the SignalHandlerSetJmp() macro instead.
 	 * True if the function should exit (a signal was called that should terminate the program.
 	 */
-	bool shouldExit();
-
-private:
-
-	/**
-	 * @brief Stores the signal number.
-	 */
-	volatile sig_atomic_t s_signo = 0;
+	static bool shouldExit();
 };
 
 /**
@@ -104,12 +97,12 @@ private:
  * This allows RAII cleanup to occur when a signal is thrown.
  */
 #define ActivateSignalHandler(handler)\
-	if (setjmp(handler.getBuf())){\
+	if (setjmp(SignalHandler::getBuf())){\
 		if (handler.shouldExit()){\
-			std::cerr << "Terminating program (" << SignalHandler::signalToString(handler.lastSignal) << ")" << std::endl;\
+			std::cerr << "Terminating program (" << simpletest::SignalHandler::signalToString(handler.lastSignal()) << ")" << std::endl;\
 			std::exit(1);\
 		}\
-		throw simpletest::SignalException(handler.lastSignal());\
+		throw simpletest::SignalException(simpletest::SignalHandler::lastSignal());\
 	}\
 	/* requires the statement to have a semicolon at the end. */\
 	(void)0

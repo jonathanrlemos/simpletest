@@ -15,12 +15,18 @@
 
 namespace simpletest{
 
-thread_local int instanceCount = 0;
-thread_local jmp_buf s_jmpbuf;
-thread_local volatile sig_atomic_t s_signo = 0;
-thread_local volatile bool s_exit = false;
+static int instanceCount = 0;
+static jmp_buf s_jmpbuf;
+static volatile sig_atomic_t s_signo = 0;
+static volatile bool s_exit = false;
 
 static const sig_atomic_t signals[] = {SIGINT, SIGABRT, SIGSEGV, SIGTERM};
+
+SignalException::SignalException(sig_atomic_t signo): std::runtime_error(SignalHandler::signalToString(signo)), signo(signo){}
+
+sig_atomic_t SignalException::getSignal(){
+	return signo;
+}
 
 static void handler(int signo){
 	switch (signo){
@@ -83,6 +89,8 @@ const char* SignalHandler::signalToString(sig_atomic_t signo){
 		return "Segmentation fault";
 	case SIGTERM:
 		return "Termination signal";
+	case 0:
+		return "No signal";
 	default:
 		return "Unknown signal";
 	}
