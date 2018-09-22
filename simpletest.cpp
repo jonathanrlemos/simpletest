@@ -9,8 +9,6 @@
 // prototypes, std::vector, std::runtime_error
 #include "simpletest.hpp"
 
-// std::pair
-#include <utility>
 // std::optional
 #include <optional>
 // std::for_each
@@ -56,26 +54,9 @@ public:
 	/**
 	 * @brief Copy constructor for UnitTest
 	 */
-	UnitTest(UnitTest& other){
-		swap(*this, other);
-	}
-
-	/**
-	 * @brief Swaps two UnitTests. Needed for the copy constructor.
-	 */
-	friend void swap(UnitTest& u1, UnitTest& u2){
-		std::swap(u1.func, u2.func);
-		std::swap(u1.name, u2.name);
-		std::swap(u1.failReason, u2.failReason);
-	}
-
-	/**
-	 * @brief Denotes that the test failed.
-	 *
-	 * @param reason Why did the test fail?
-	 */
-	void setFailureReason(const char* reason){
-		failReason = reason;
+	UnitTest(const UnitTest& other){
+		func = other.func;
+		name = other.name;
 	}
 
 	/**
@@ -96,26 +77,17 @@ public:
 		return name;
 	}
 
-	/**
-	 * @brief Gets the failure reason for the test.
-	 * If the return value is std::nullopt, the test succeeded.
-	 *
-	 * @return Why the test failed, or std::nullopt if it succeeded.
-	 * You can check if the test succeeded like follows:<br>
-	 * ```C++
-	 * std::optional<std::string> opt = myUnitTest.getFailureReason();
-	 * if (!opt){
-	 *     // the test succeeded
-	 * }
-	 */
-	std::optional<std::string> getFailureReason() const{
-		return failReason;
-	}
-
 private:
 	void(*func)(IOCapturer&, SignalHandler&);
 	const char* name;
-	std::optional<std::string> failReason = std::nullopt;
+};
+
+struct FailedTestInfo{
+	FailedTestInfo(size_t index, const char* name, const char* reason): index(index), name(name), reason(std::string(reason)){
+	}
+	size_t index;
+	const char* name;
+	std::string reason;
 };
 
 /**
@@ -124,19 +96,19 @@ private:
  * @param __testvec The test vector retrieved through __gettestvec()
  * @param __failvec The tests that failed.
  */
-static void printResults(size_t __testvec_size, std::vector<std::pair<size_t, const UnitTest&>>& __failvec){
+static void printResults(size_t __testvec_size, std::vector<FailedTestInfo>& __failvec){
 	size_t totalLen;
 	// first, determine the maximum length of the unit test names
 	// this is so we can put the correct number of '.''s so everything ends up aligned
 
 	// get the length of the first test
-	size_t maxLen = std::strlen(__failvec[0].second.getName());
+	size_t maxLen = std::strlen(__failvec[0].name);
 	// for each test from {1..end}
 	std::for_each(__failvec.begin() + 1, __failvec.end(), [&maxLen](const auto& elem){
 		// if its name's length is greater than our max
-		if (std::strlen(elem.second.getName()) > maxLen){
+		if (std::strlen(elem.name) > maxLen){
 			// set our max to the length of that test's name
-			maxLen = std::strlen(elem.second.getName());
+			maxLen = std::strlen(elem.name);
 		}
 	});
 
@@ -159,14 +131,14 @@ static void printResults(size_t __testvec_size, std::vector<std::pair<size_t, co
 	std::for_each(__failvec.begin(), __failvec.end(), [__testvec_size, maxLen](const auto& elem){
 		// output "Test [index] ([func_name])"
 		// std::setw(nDigits) makes sure that all instances are aligned.
-		std::cout << "Test " << std::left << std::setw(nDigits(__testvec_size)) << std::get<size_t>(elem) + 1 << " (" << std::get<const char*>(elem) << ')';
+		std::cout << "Test " << std::left << std::setw(nDigits(__testvec_size)) << elem.index + 1 << " (" << elem.name << ')';
 		// output 3 dots + the difference between the length of this string and the longest.
 		// this makes sure that all lines are aligned
-		for (size_t i = 0; i < maxLen - std::strlen(elem.getName()) + 3; ++i){
+		for (size_t i = 0; i < maxLen - std::strlen(elem.name) + 3; ++i){
 			std::cout << '.';
 		}
 		// output ([reason for failure])
-		std::cout << '(' << elem.second.getFailureReason() << ')' << std::endl;
+		std::cout << '(' << elem.reason << ')' << std::endl;
 	});
 }
 
@@ -186,10 +158,10 @@ static std::vector<UnitTest>& __gettestvec(){
  *
  * @return A vector containing the unit tests that failed, along with their indexes within the test vector.
  */
-static std::vector<std::pair<size_t, const UnitTest&>> runTests(std::vector<UnitTest>& __testvec){
+static std::vector<FailedTestInfo> runTests(std::vector<UnitTest>& __testvec){
 	size_t i = 0;
 	size_t maxLen = 0;
-	std::vector<std::pair<size_t, const UnitTest&>> __failvec;
+	std::vector<FailedTestInfo> __failvec;
 
 	if (__testvec.size() == 0){
 		return {};
@@ -198,7 +170,7 @@ static std::vector<std::pair<size_t, const UnitTest&>> runTests(std::vector<Unit
 	maxLen = std::strlen(__testvec[0].getName());
 	std::for_each(__testvec.begin() + 1, __testvec.end(), [&maxLen](const auto& elem){
 		if (std::strlen(elem.getName()) > maxLen){
-			maxLen = std::strlen(elem.second);
+			maxLen = std::strlen(elem.getName());
 		}
 	});
 
@@ -217,30 +189,25 @@ static std::vector<std::pair<size_t, const UnitTest&>> runTests(std::vector<Unit
 			std::cout << "Passed";
 		}
 		catch (FailedAssertion& e){
-			__testvec[i].setFailureReason(e.what());
-			__failvec.push_back(std::make_pair(i, __testvec[i]));
+			__failvec.push_back(FailedTestInfo(i, __testvec[i].getName(), e.what()));
 			std::cout << "Failed: " << e.what();
 		}
 		catch (FailedExpectation& e){
-			__testvec[i].setFailureReason(e.what());
-			__failvec.push_back(std::make_pair(i, __testvec[i]));
+			__failvec.push_back(FailedTestInfo(i, __testvec[i].getName(), e.what()));
 			std::cout << "Failed: " << e.what();
 		}
 		catch (SignalException& e){
 			const std::string failureReason = std::string("Signal thrown: ") + e.what();
-			__testvec[i].setFailureReason(failureReason.c_str());
-			__failvec.push_back(std::make_pair(i, __testvec[i]));
+			__failvec.push_back(FailedTestInfo(i, __testvec[i].getName(), failureReason.c_str()));
 			std::cout << failureReason;
 		}
 		catch (std::exception& e){
 			const std::string failureReason = std::string("Internal error: ") + e.what();
-			__testvec[i].setFailureReason(failureReason.c_str());
-			__failvec.push_back(std::make_pair(i, __testvec[i]));
+			__failvec.push_back(FailedTestInfo(i, __testvec[i].getName(), failureReason.c_str()));
 			std::cout << failureReason;
 		}
 		catch (...){
-			__testvec[i].setFailureReason("Unknown internal error");
-			__failvec.push_back(std::make_pair(i, __testvec[i]));
+			__failvec.push_back(FailedTestInfo(i, __testvec[i].getName(), "Unknown internal error"));
 			std::cout << "Unknown internal error";
 		}
 		std::cout << std::endl;
@@ -268,7 +235,7 @@ void __registertest(void(*test)(IOCapturer&, SignalHandler&), const char* name){
 
 int __executetests(int argc, char** argv){
 	std::vector<UnitTest>& __testvec = __gettestvec();
-	std::vector<std::pair<size_t, const UnitTest&>> __failvec;
+	std::vector<FailedTestInfo> __failvec;
 
 	(void)argc;
 	(void)argv;

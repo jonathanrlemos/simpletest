@@ -12,19 +12,32 @@ A simple testing framework written in C++17.
 * Written in a way that is somewhat easy to understand.
 
 ## Getting started
-At the moment, only POSIX systems (Linux, OSX, BSD, etc.) with `g++` are supported.
+
+### Requirements
+* POSIX-compatible OS (Linux, OSX, BSD, Cygwin, etc.)
+* g++ or clang++ with C++17 support
 
 ### Building the library
-To build the library:
+To build the library with `g++`:
 
 ```shell
 make
 ```
 
-This will output a static library called `libsimpletest.a`
+To build the library with `clang++`:
 
-### Linking the library with g++
-This can be passed to `g++` like any other object file.
+```shell
+make CXX=clang++
+```
+
+Append any `make` commands with `CXX=clang++` to use `clang++` instead of `g++`
+
+Either of these commands will output a static library called `libsimpletest.a`
+
+See below for instructions on linking the library.
+
+### Linking the library
+The library can be passed to `g++` or `clang++` like any other object file.
 ```shell
 g++ mytest.cpp libsimpletest.a -std=c++17 -o mytest
 ```
@@ -41,7 +54,7 @@ To build the library with debug symbols:
 make debug
 ```
 
-This will also output a static library called `libsimpletest.a`
+This will also output a static library called `libsimpletest.a` that can be used the same way as the release library.
 
 ### Sample test
 To build and run the sample test:
@@ -54,7 +67,7 @@ make sample
 The sample test's source can be found in [sample.cpp](sample.cpp).
 
 ### Documentation
-To build and view the documentation (requires [doxygen](www.doxygen.nl)):
+To build and view the documentation (requires [Doxygen](http://www.doxygen.nl)):
 
 ```shell
 doxygen
