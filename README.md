@@ -23,7 +23,7 @@ make
 
 This will output a static library called `libsimpletest.a`
 
-### Linking the library with gcc
+### Linking the library with g++
 This can be passed to `g++` like any other object file.
 ```shell
 g++ mytest.cpp libsimpletest.a -std=c++17 -o mytest
@@ -58,7 +58,7 @@ To build and view the documentation (requires [doxygen](www.doxygen.nl)):
 
 ```shell
 doxygen
-firefox docs/html/globals.html # use your favorite browser in place of firefox
+firefox docs/html/index.html # use your favorite browser in place of firefox
 ```
 
 ### Cleaning the project folder

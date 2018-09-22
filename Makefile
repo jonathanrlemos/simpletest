@@ -46,3 +46,4 @@ docs:
 .PHONY: clean
 clean:
 	rm -f $(OBJECTS) $(DBGOBJECTS) $(LIBRARY) sample sample.dbg.o
+	rm -rf docs
