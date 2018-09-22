@@ -137,8 +137,8 @@ static void printResults(size_t __testvec_size, std::vector<FailedTestInfo>& __f
 		for (size_t i = 0; i < maxLen - std::strlen(elem.name) + 3; ++i){
 			std::cout << '.';
 		}
-		// output ([reason for failure])
-		std::cout << '(' << elem.reason << ')' << std::endl;
+		// output [reason for failure]
+		std::cout << "Failed: " << elem.reason << std::endl;
 	});
 }
 

@@ -10,6 +10,7 @@ VERSION=0.1
 SHELL=/bin/sh
 
 LIBRARY=libsimpletest.a
+DEMO=demo
 
 CXX:=g++
 CXXFLAGS:=-Wall -Wextra -pedantic -std=c++17 -DPROG_NAME=\"$(NAME)\" -DPROG_VERSION=\"$(VERSION)\"
@@ -18,7 +19,7 @@ RELEASEFLAGS:=-O2
 LDFLAGS=-lmega
 
 DIRECTORIES=$(shell find . -type d 2>/dev/null | sed -re 's|^.*\.git.*$$||' | awk 'NF')
-FILES=$(foreach directory,$(DIRECTORIES),$(shell ls $(directory) | egrep '^.*\.cpp$$' | sed -re 's|^sample.cpp$$||;s|^(.+)\.cpp$$|\1|' | awk 'NF'))
+FILES=$(foreach directory,$(DIRECTORIES),$(shell ls $(directory) | egrep '^.*\.cpp$$' | sed -re 's|^$(DEMO).cpp$$||;s|^(.+)\.cpp$$|\1|' | awk 'NF'))
 
 SOURCEFILES=$(foreach file,$(FILES),$(file).cpp)
 OBJECTS=$(foreach file,$(FILES),$(file).o)
@@ -30,8 +31,8 @@ release: $(OBJECTS)
 debug: $(DBGOBJECTS)
 	ar rcs $(LIBRARY) $(DBGOBJECTS)
 
-sample: sample.dbg.o debug
-	$(CXX) -o sample sample.dbg.o $(DBGOBJECTS) $(LIBRARY) $(CXXFLAGS) $(DBGFLAGS) $(LDFLAGS)
+demo: $(DEMO).dbg.o debug
+	$(CXX) -o $(DEMO) $(DEMO).dbg.o $(DBGOBJECTS) $(LIBRARY) $(CXXFLAGS) $(DBGFLAGS) $(LDFLAGS)
 
 .PHONY: docs
 docs:
@@ -45,5 +46,5 @@ docs:
 
 .PHONY: clean
 clean:
-	rm -f $(OBJECTS) $(DBGOBJECTS) $(LIBRARY) sample sample.dbg.o
+	rm -f $(OBJECTS) $(DBGOBJECTS) $(LIBRARY) $(DEMO) $(DEMO).dbg.o
 	rm -rf docs

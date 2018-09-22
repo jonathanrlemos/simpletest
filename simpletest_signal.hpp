@@ -9,6 +9,7 @@
 #ifndef __SIMPLETEST_SIGNAL_HPP
 #define __SIMPLETEST_SIGNAL_HPP
 
+#include <iostream>
 #include <setjmp.h>
 #include <csignal>
 #include <mutex>

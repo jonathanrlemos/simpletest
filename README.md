@@ -56,15 +56,15 @@ make debug
 
 This will also output a static library called `libsimpletest.a` that can be used the same way as the release library.
 
-### Sample test
-To build and run the sample test:
+### Demo test
+To build and run the demo test:
 
 ```shell
-make sample
-./sample
+make demo
+./demo
 ```
 
-The sample test's source can be found in [sample.cpp](sample.cpp).
+The sample test's source can be found in [demo.cpp](demo.cpp).
 
 ### Documentation
 To build and view the documentation (requires [Doxygen](http://www.doxygen.nl)):
@@ -93,7 +93,7 @@ UNIT_TEST(my_test){
 	ASSERT(2 + 2 == 4);
 }
 
-UNIT_TEST(myTest2){
+UNIT_TEST(myTestNumber2){
 	int i = 7;
 	ASSERT(i == 7);
 }
@@ -104,6 +104,21 @@ Then, execute all of your unit tests like follows:
 int main(int argc, char** argv){
 	return EXECUTE_TESTS();
 }
+```
+
+Compiling and running the program will produce the following output:
+```shell
+[user@computer simpletest]$ ./demo
+Test 1 (my_test).........Passed
+Test 2 (myTestNumber2)...Failed: i == 6
+
+Results:
+1 Passed
+1 Failed
+
+Failed tests:
+Test 2 (myTestNumber2)...Failed: i == 6
+[user@computer simpletest]$
 ```
 The EXECUTE\_TESTS() macro executes all defined tests and returns the number of tests that failed.
 Output will be placed on the screen detailing which tests failed and why.
