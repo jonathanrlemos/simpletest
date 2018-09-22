@@ -12,8 +12,9 @@ A simple testing framework written in C++17.
 * Written in a way that is somewhat easy to understand.
 
 ## Getting started
-At the moment, only POSIX systems (Linux, OSX, BSD, etc.) with gcc are supported.
+At the moment, only POSIX systems (Linux, OSX, BSD, etc.) with `g++` are supported.
 
+### Building the library
 To build the library:
 
 ```shell
@@ -21,8 +22,19 @@ make
 ```
 
 This will output a static library called `libsimpletest.a`
-This can be passed to `gcc` like any other object file, or it can be linked with `-lsimpletest` if it is copied to an ld library directory (e.g. `/usr/lib`)
 
+### Linking the library with gcc
+This can be passed to `g++` like any other object file.
+```shell
+g++ mytest.cpp libsimpletest.a -std=c++17 -o mytest
+```
+
+Alternatively, it can be linked like follows if the library is copied to an `ld` include directory (e.g. `/usr/lib`)
+```shell
+g++ mytest.cpp -lsimpletest -std=c++17 -o mytest
+```
+
+### Debug library
 To build the library with debug symbols:
 
 ```shell
@@ -31,6 +43,7 @@ make debug
 
 This will also output a static library called `libsimpletest.a`
 
+### Sample test
 To build and run the sample test:
 
 ```shell
@@ -40,13 +53,15 @@ make sample
 
 The sample test's source can be found in [sample.cpp](sample.cpp).
 
-To build and view the documentation (requires [doxygen](www.doxygen.nl) to be installed):
+### Documentation
+To build and view the documentation (requires [doxygen](www.doxygen.nl)):
 
 ```shell
 doxygen
-firefox docs/html/globals.html
+firefox docs/html/globals.html # use your favorite browser in place of firefox
 ```
 
+### Cleaning the project folder
 To clean the project folder:
 
 ```shell
@@ -54,12 +69,20 @@ make clean
 ```
 
 ## Usage
-Define a unit test like follows:
+
+### Making and running unit tests
+
+First, make your unit tests like below:
 ```C++
 #include "simpletest.hpp"
 
-UNIT_TEST(your_name_here){
+UNIT_TEST(my_test){
 	ASSERT(2 + 2 == 4);
+}
+
+UNIT_TEST(myTest2){
+	int i = 7;
+	ASSERT(i == 7);
 }
 ```
 
@@ -72,6 +95,8 @@ int main(int argc, char** argv){
 The EXECUTE\_TESTS() macro executes all defined tests and returns the number of tests that failed.
 Output will be placed on the screen detailing which tests failed and why.
 
+### Testing stdout
+
 Check the output of the latest line on stdout like follows:
 ```C++
 UNIT_TEST(stdout_check){
@@ -81,6 +106,8 @@ UNIT_TEST(stdout_check){
 ```
 The EXPECT() macro fails the test if the latest line on stdout does not match the given string.
 Note that EXPECT() only checks the latest line.
+
+### Sending to stdin
 
 Send a line to stdin like follows:
 ```C++
