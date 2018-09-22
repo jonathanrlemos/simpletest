@@ -97,7 +97,7 @@ public:
  * This allows RAII cleanup to occur when a signal is thrown.
  */
 #define ActivateSignalHandler(handler)\
-	if (setjmp(SignalHandler::getBuf())){\
+	if (setjmp(simpletest::SignalHandler::getBuf())){\
 		if (handler.shouldExit()){\
 			std::cerr << "Terminating program (" << simpletest::SignalHandler::signalToString(handler.lastSignal()) << ")" << std::endl;\
 			std::exit(1);\

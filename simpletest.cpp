@@ -8,16 +8,14 @@
 
 #include "simpletest.hpp"
 #include "simpletest_signal.hpp"
+
 #include <vector>
+#include <tuple>
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
 #include <cstring>
-#include <optional>
-
-#include <signal.h>
-#include <setjmp.h>
 
 namespace simpletest{
 
@@ -153,7 +151,6 @@ static std::vector<std::tuple<size_t, const char*, std::string>> runTests(std::v
 int __executetests(int argc, char** argv){
 	std::vector<std::pair<void(*)(IOCapturer&, SignalHandler&), const char*>>& __testvec = __gettestvec();
 	std::vector<std::tuple<size_t, const char*, std::string>> __failvec;
-	std::optional<IOCapturer> __iocapt = std::nullopt;
 
 	(void)argc;
 	(void)argv;

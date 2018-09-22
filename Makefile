@@ -9,7 +9,7 @@ NAME=simpletest
 VERSION=0.1
 SHELL=/bin/sh
 
-LIBRARY=simpletest.a
+LIBRARY=libsimpletest.a
 
 CXX:=g++
 CXXFLAGS:=-Wall -Wextra -pedantic -std=c++17 -DPROG_NAME=\"$(NAME)\" -DPROG_VERSION=\"$(VERSION)\"
@@ -30,7 +30,7 @@ release: $(OBJECTS)
 debug: $(DBGOBJECTS)
 	ar rcs $(LIBRARY) $(DBGOBJECTS)
 
-test: sample.dbg.o debug
+sample: sample.dbg.o debug
 	$(CXX) -o sample sample.dbg.o $(DBGOBJECTS) $(LIBRARY) $(CXXFLAGS) $(DBGFLAGS) $(LDFLAGS)
 
 .PHONY: docs
@@ -45,4 +45,4 @@ docs:
 
 .PHONY: clean
 clean:
-	rm -f *.o $(LIBRARY)
+	rm -f $(OBJECTS) $(DBGOBJECTS) $(LIBRARY) sample sample.dbg.o
