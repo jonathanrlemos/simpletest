@@ -10,10 +10,11 @@
 #define __SIMPLETEST_EXT_HPP
 
 #include "attribute.hpp"
+
 #include <cstddef>
+#include <memory>
 #include <vector>
 #include <string>
-#include <memory>
 
 namespace simpletest{
 
@@ -86,6 +87,33 @@ bool fileExists(const char* file);
 class TestEnvironment{
 public:
 	/**
+	 * @brief Move constructor for TestEnvironment.
+	 */
+	TestEnvironment(TestEnvironment&& other);
+
+	/**
+	 * @brief Move assignment operator for TestEnvironment.
+	 */
+	TestEnvironment& operator=(TestEnvironment&& other);
+
+	/**
+	 * @brief Deleted copy constructor.
+	 * This class should not be copied because the destructor deletes files and should only fire once.
+	 */
+	TestEnvironment(const TestEnvironment& other) = delete;
+
+	/**
+	 * @brief Deleted assignment operator.
+	 * This class should not be copied because the destructor deletes files and should only fire once.
+	 */
+	TestEnvironment& operator=(const TestEnvironment& t) = delete;
+
+	/**
+	 * @brief Cleans up the test environment.
+	 */
+	~TestEnvironment();
+
+	/**
 	 * @brief Sets up a test environment with the following structure:<br>
 	 * <pre>
 	 * basePath (0755)
@@ -120,35 +148,37 @@ public:
 	friend TestEnvironment setupFullEnvironment(const char* basePath);
 
 	/**
-	 * @brief Assignment operator. Needed for setup(Basic|Full)Environment to return a TestEnvironment object.
+	 * @brief Returns the list of files in the TestEnvironment.
 	 */
-	TestEnvironment& operator=(TestEnvironment& other);
-
-	/**
-	 * @brief Swaps two TestEnvironment objects. Needed for the assignment operator to work.
-	 */
-	friend void swap(TestEnvironment& te1, TestEnvironment& te2);
-
 	std::vector<std::string> getFiles();
-
-	/**
-	 * @brief Cleans up the test environment.
-	 */
-	~TestEnvironment();
 
 private:
 	struct TestEnvironmentImpl;
-	std::unique_ptr<TestEnvironmentImpl> impl;
+	/**
+	 * @brief pImpl idiom.
+	 * This unique_ptr contains the private variables of the TestEnvironment class.
+	 * This is used so we can #include fewer dependencies and speed up compilation times.
+	 */
+	 std::unique_ptr<TestEnvironmentImpl> impl;
+
+	/**
+	 * @brief Creates a directory within the test environment and fills it with test files.
+	 * These files will be created with the following format:
+	 * `path/{filePrefix}_{number}`
+	 * The number is 1-indexed.
+	 *
+	 * @param path The directory to create.
+	 * If this directory's parent does not exist, this function will fail.
+	 *
+	 * @param nFiles The number of files to create.
+	 * @param filePrefix The prefix to append to each file.
+	 */
+	TestEnvironment& createTestDirectory(const char* path, const char* filePrefix, int nFiles = 20, size_t maxLen = 4096);
 
 	/**
 	 * @brief Private constructor to prevent direct instantiation of TestEnvironment objects.
 	 */
 	TestEnvironment();
-
-	/**
-	 * @brief Copy constructor for TestEnvironment.
-	 */
-	TestEnvironment(TestEnvironment& other);
 };
 
 /**
@@ -159,18 +189,21 @@ private:
  */
 void fillMemory(void* mem, size_t len);
 
+namespace rand{
 /**
- * @brief Fills a block of memory using random letters from 'A' to 'Z'.
+ * @brief Seeds the internal random number generator.
+ * A consistent random number generator is needed to generate the same numbers across all platforms.
  *
- * @param mem The memory to fill.
- * @param len The length of the memory to fill.
- * @param seed The random seed to use.
- * The same seed will always generate the same sequence.
+ * @param seed The seed to use.
+ * All subsequent numbers generated will be based on this seed.
  */
-void fillMemory(void* mem, size_t len, unsigned seed);
+void seed(unsigned seed);
 
-std::string AT_CONST __makepath(std::vector<std::string> components);
-#define MAKE_PATH(...) __makepath({__VA_ARGS__})
+/**
+ * @brief Returns the next random number in the sequence.
+ */
+int next();
+}
 
 }
 

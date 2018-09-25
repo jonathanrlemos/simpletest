@@ -9,10 +9,9 @@
 #ifndef __SIMPLETEST_SIGNAL_HPP
 #define __SIMPLETEST_SIGNAL_HPP
 
-#include <iostream>
-#include <setjmp.h>
+#include <csetjmp>
 #include <csignal>
-#include <mutex>
+#include <iostream>
 
 namespace simpletest{
 
@@ -43,6 +42,8 @@ private:
 /**
  * @brief This class handles signals while it is active.
  * Only one SignalHandler can be active in a thread at once.
+ *
+ * A singleton is not appropriate here, because this class's destructor is needed to stop capturing signals, and the destructor for a singleton is never called.
  */
 class SignalHandler{
 public:
@@ -53,6 +54,28 @@ public:
 	 * @exception std::logic_error A signal handler has already been instantiated in this thread.
 	 */
 	SignalHandler();
+
+	/**
+	 * @brief Move constructor for SignalHandler.
+	 */
+	SignalHandler(SignalHandler&& other);
+
+	/**
+	 * @brief Move assignment operator for SignalHandler.
+	 */
+	SignalHandler& operator=(SignalHandler&& other);
+
+	/**
+	 * @brief Deleted copy constructor.
+	 * There should only be one of this class, so it should not be copied;
+	 */
+	SignalHandler(const SignalHandler& other) = delete;
+
+	/**
+	 * @brief Deleted copy assignment.
+	 * There should only be one of this class, so it should not be copied.
+	 */
+	SignalHandler& operator=(const SignalHandler& val) = delete;
 
 	/**
 	 * @brief Stops capturing signals.
@@ -81,13 +104,13 @@ public:
 	static const char* signalToString(sig_atomic_t signo);
 
 	/**
-	 * @brief Do not call directly. Use the SignalHandlerSetJmp() macro instead.
-	 * Gets a reference to the jump buffer for use with the SignalHandlerSetJmp() macro.
+	 * @brief Do not call directly. Use the ActivateSignalHandler() macro instead.
+	 * Gets a reference to the jump buffer for use with the ActivateSignalHandler() macro.
 	 */
 	static jmp_buf& getBuf();
 
 	/**
-	 * @brief Do not call this function directly. Use the SignalHandlerSetJmp() macro instead.
+	 * @brief Do not call this function directly. Use the ActivateSignalHandler() macro instead.
 	 * True if the function should exit (a signal was called that should terminate the program.
 	 */
 	static bool shouldExit();
@@ -98,7 +121,9 @@ public:
  * This allows RAII cleanup to occur when a signal is thrown.
  */
 #define ActivateSignalHandler(handler)\
+	/* returns 0 on its first call, returns signo (>0) when being jumped to through longjmp() */\
 	if (setjmp(simpletest::SignalHandler::getBuf())){\
+		/* SIGABRT, SIGINT, etc. */\
 		if (handler.shouldExit()){\
 			std::cerr << "Terminating program (" << simpletest::SignalHandler::signalToString(handler.lastSignal()) << ")" << std::endl;\
 			std::exit(1);\

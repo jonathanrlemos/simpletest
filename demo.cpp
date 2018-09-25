@@ -1,4 +1,4 @@
-/** @file sample.cpp
+/** @file demo.cpp
  * @brief Tests simpletest framework
  * @copyright Copyright (c) 2018 Jonathan Lemos
  *
@@ -106,6 +106,7 @@ UNIT_TEST(FAIL_send2){
 
 UNIT_TEST(PASS_test_printf){
 	TEST_PRINTF("qqq\n");
+	std::cout << "IF THIS SHOWS, IT IS A BUG" << std::endl;
 	TEST_PRINTF("test printf %d\n", 123);
 }
 

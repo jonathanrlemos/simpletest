@@ -82,11 +82,29 @@ private:
 	const char* name;
 };
 
+/**
+ * @brief A structure that contains info about a failed test.
+ */
 struct FailedTestInfo{
+	/**
+	 * @brief Constructs a FailedTestInfo structure.
+	 */
 	FailedTestInfo(size_t index, const char* name, const char* reason): index(index), name(name), reason(std::string(reason)){
 	}
+
+	/**
+	 * @brief The index within the test vector of the failed test.
+	 */
 	size_t index;
+
+	/**
+	 * @brief The name of the failed test.
+	 */
 	const char* name;
+
+	/**
+	 * @brief The reason for the test's failure.
+	 */
 	std::string reason;
 };
 

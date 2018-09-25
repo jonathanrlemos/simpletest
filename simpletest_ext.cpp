@@ -7,12 +7,49 @@
  */
 
 #include "simpletest_ext.hpp"
-#include <fstream>
+
+#include <algorithm>
 #include <cstring>
 #include <cerrno>
+#include <fstream>
+#include <sstream>
 #include <sys/stat.h>
+#include <unistd.h>
 
 namespace simpletest{
+
+std::string __makepath(std::vector<std::string> components){
+	std::string ret;
+	if (components.empty()){
+		return "";
+	}
+	ret = components[0];
+
+	for (size_t i = 1; i < components.size(); ++i){
+		if (ret[ret.size() - 1] != '/'){
+			ret += '/';
+		}
+		ret += components[i];
+	}
+
+	return ret;
+}
+#define MAKE_PATH(...) __makepath({__VA_ARGS__})
+
+namespace rand{
+
+static unsigned randSeed = 0;
+
+void seed(unsigned seed){
+	randSeed = seed;
+}
+
+int next(){
+	randSeed = 1103515245 * randSeed + 12345;
+	return randSeed;
+}
+
+}
 
 void createFile(const char* path, void* mem, size_t memLen){
 	std::ofstream ofs;
@@ -25,6 +62,36 @@ void createFile(const char* path, void* mem, size_t memLen){
 	ofs.close();
 	if (!ofs){
 		throw std::runtime_error("Failed to write to file " + std::string(path));
+	}
+}
+
+void createFile(const char* path, size_t maxRandLen){
+	std::vector<unsigned char> randData;
+	size_t randLen = rand::next() % (maxRandLen + 1);
+
+	randData.resize(randLen);
+	fillMemory(&(randData[0]), randLen);
+
+	createFile(path, &(randData[0]), randLen);
+}
+
+void createFile(const char* path, void* mem, size_t memLen, mode_t mode){
+	createFile(path, mem, memLen);
+
+	if (chmod(path, mode) != 0){
+		std::stringstream ss_oct;
+		ss_oct << std::oct << mode;
+		throw std::runtime_error("Failed to chmod file " + std::string(path) + " to " + ss_oct.str() + ' ' + std::strerror(errno));
+	}
+}
+
+void createFile(const char* path, size_t maxRandLen, mode_t mode){
+	createFile(path, maxRandLen);
+
+	if (chmod(path, mode) != 0){
+		std::stringstream ss_oct;
+		ss_oct << std::oct << mode;
+		throw std::runtime_error("Failed to chmod file " + std::string(path) + " to " + ss_oct.str() + ' ' + std::strerror(errno));
 	}
 }
 
@@ -82,48 +149,20 @@ bool fileExists(const char* file){
 	return S_ISREG(st.st_mode);
 }
 
-static unsigned csRandSeed = 0;
-
-static void csSrand(unsigned seed){
-	csRandSeed = seed;
-}
-
-static int csRand(){
-	csRandSeed = 1103515245 * csRandSeed + 12345;
-	return csRandSeed;
-}
-
 void fillMemory(void* mem, size_t len){
 	unsigned char* ucmem = (unsigned char*)mem;
 	for (size_t i = 0; i < len; ++i){
-		ucmem[i] = csRand() % ('Z' - 'A') + 'A';
+		ucmem[i] = rand::next() % ('Z' - 'A') + 'A';
 	}
 }
 
 void fillMemory(void* mem, size_t len, unsigned seed){
 	unsigned char* ucmem = (unsigned char*)mem;
-	csSrand(seed);
+	rand::seed(seed);
 
 	for (size_t i = 0; i < len; ++i){
-		ucmem[i] = csRand();
+		ucmem[i] = rand::next();
 	}
-}
-
-std::string __makepath(std::vector<std::string> components){
-	std::string ret;
-	if (components.empty()){
-		return "";
-	}
-	ret = components[0];
-
-	for (size_t i = 1; i < components.size(); ++i){
-		if (ret[ret.size() - 1] != '/'){
-			ret += '/';
-		}
-		ret += components[i];
-	}
-
-	return ret;
 }
 
 struct TestEnvironment::TestEnvironmentImpl{
@@ -133,57 +172,79 @@ struct TestEnvironment::TestEnvironmentImpl{
 
 TestEnvironment::TestEnvironment(): impl(std::make_unique<TestEnvironmentImpl>()){}
 
-/* TODO: implement */
+TestEnvironment::TestEnvironment(TestEnvironment&& other){
+	impl = std::move(other.impl);
+}
+
+TestEnvironment& TestEnvironment::operator=(TestEnvironment&& other){
+	impl = std::move(other.impl);
+	return *this;
+}
+
 TestEnvironment::~TestEnvironment(){
+	std::for_each(impl->files.begin(), impl->files.end(), [](const auto& elem){
+		chmod(elem.c_str(), 0755);
+		remove(elem.c_str());
+	});
 
+	std::for_each(impl->directories.begin(), impl->directories.end(), [](const auto& elem){
+		chmod(elem.c_str(), 0666);
+		rmdir(elem.c_str());
+	});
 }
 
-TestEnvironment::TestEnvironment(TestEnvironment& other){
-	swap(*this, other);
-}
+TestEnvironment& TestEnvironment::createTestDirectory(const char* path, const char* filePrefix, int nFiles, size_t maxLen){
+	if (mkdir(path, 0755) != 0){
+		throw std::runtime_error("Failed to create directory " + std::string(path) + '(' + std::strerror(errno) + ')');
+	}
+	impl->directories.push_back(path);
 
-void swap(TestEnvironment& te1, TestEnvironment& te2){
-	std::swap(te1.impl, te2.impl);
-}
+	for (int i = 1; i <= nFiles; ++i){
+		std::string file = MAKE_PATH(path, filePrefix, std::to_string(i).c_str(), ".txt");
+		std::vector<unsigned char> randData;
+		size_t randLen = rand::next() % (sizeof(randData) + 1);
 
-TestEnvironment& TestEnvironment::operator=(TestEnvironment& other){
-	swap(*this, other);
+		randData.resize(maxLen);
+		fillMemory(&(randData[0]), randLen);
+
+		createFile(file.c_str(), &(randData[0]), randLen);
+		impl->files.push_back(file);
+	}
+
 	return *this;
 }
 
 TestEnvironment setupBasicEnvironment(const char* basePath){
 	TestEnvironment te;
-	te.impl->directories.push_back(basePath);
 
+	rand::seed(0);
 
-	if (mkdir(basePath, 0755) != 0){
-		throw std::runtime_error("Failed to create directory " + std::string(basePath) + '(' + std::strerror(errno) + ')');
-	}
-
-	csSrand(0);
-
-	for (int i = 1; i <= 20; ++i){
-		unsigned char randData[4096];
-		unsigned char randLen = csRand() % sizeof(randData) + 1;
-
-		fillMemory(randData, randLen);
-		createFile(MAKE_PATH(basePath, "file" + std::to_string(i)).c_str(), randData, randLen);
-	}
-
+	te.createTestDirectory(basePath, "file");
 	return te;
 }
 
 TestEnvironment setupFullEnvironment(const char* basePath){
 	TestEnvironment te;
-	te.impl->directories.push_back(basePath);
 
 	if (mkdir(basePath, 0755) != 0){
 		throw std::runtime_error("Failed to create directory " + std::string(basePath) + '(' + std::strerror(errno) + ')');
 	}
 
-	if (mkdir(MAKE_PATH(basePath, "dir1").c_str(), 0755) != 0){
-		throw std::runtime_error("Failed to create directory " + MAKE_PATH(basePath, "dir1") + '(' + std::strerror(errno) + ')');
+	te.createTestDirectory(MAKE_PATH(basePath, "dir1").c_str(), "dir1").createTestDirectory(MAKE_PATH(basePath, "dir2").c_str(), "dir2").createTestDirectory(MAKE_PATH(basePath, "excl").c_str(), "excl");
+
+	{
+		std::string file = MAKE_PATH(basePath, "excl", "excl_noacc.txt");
+		std::vector<unsigned char> randData;
+		size_t randLen = rand::next() % (sizeof(randData) + 1);
+
+		randData.resize(4096);
+		fillMemory(&(randData[0]), randLen);
+		createFile(file.c_str(), &(randData[0]), randLen);
+		if (chmod(file.c_str(), 0000) != 0){
+			throw std::runtime_error("Failed to chmod file " + file + " to 000 " + std::strerror(errno));
+		}
 	}
+
 
 	return te;
 }
