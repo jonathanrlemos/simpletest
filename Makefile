@@ -6,7 +6,7 @@
 # of the MIT license.  See the LICENSE file for details.
 
 NAME=simpletest
-VERSION=0.1
+VERSION=0.1 beta
 SHELL=/bin/sh
 
 LIBRARY=libsimpletest.a

@@ -18,12 +18,21 @@ namespace simpletest{
 
 struct IOCapturerImpl;
 
+/**
+ * @brief Captures terminal output.
+ * There can only be one instance of this class at a time.
+ *
+ * A singleton is not appropriate here, because this class's destructor is needed to stop the I/O capture.
+ */
 class IOCapturer{
 public:
 	/**
 	 * @brief Begins capturing std(out/err/in).
 	 * This output is not echoed to the screen while it is being captured.
-	 * Capture stops when the IOCapturer function is destructed.
+	 * Capture stops when the IOCapturer instance is destructed.
+	 *
+	 * @exception std::logic_error There is already an instance of this class.
+	 * @exception std::runtime_error Failed to create one or more pipes.
 	 */
 	IOCapturer();
 
@@ -65,6 +74,10 @@ public:
 	int AT_PRINTF_LIKE(1) printToScreen(const char* format, ...);
 
 private:
+	/**
+	 * @brief Stores the number of instances of this class that are active.
+	 * If this is greater than 0, trying to instantiate this class will cause an std::logic_error.
+	 */
 	static int instanceCount;
 	std::unique_ptr<IOCapturerImpl> impl;
 };
