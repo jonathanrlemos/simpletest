@@ -6,14 +6,14 @@
 # of the MIT license.  See the LICENSE file for details.
 
 NAME=simpletest
-VERSION=0.1 beta
+VERSION=0.1\ beta
 SHELL=/bin/sh
 
 LIBRARY=libsimpletest.a
 DEMO=demo
 
 CXX:=g++
-CXXFLAGS:=-Wall -Wextra -pedantic -std=c++17 -DPROG_NAME=\"$(NAME)\" -DPROG_VERSION=\"$(VERSION)\"
+CXXFLAGS:=-Wall -Wextra -pedantic -std=c++17 -DPROG_NAME="$(NAME)" -DPROG_VERSION="$(VERSION)"
 DBGFLAGS:=-g
 RELEASEFLAGS:=-O2
 LDFLAGS=-lmega

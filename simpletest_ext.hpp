@@ -25,10 +25,26 @@ namespace simpletest{
  * If a file already exists at this path, it will be overwritten.
  * @param mem The memory to fill the file with.
  * @param memLen The length of the aforementioned memory.
+ * @param mode The permissions to give the file.
+ * By default, this is set to 0644, which gives read+write permission to the user and read only permission to others.
  *
  * @exception std::runtime_error There was an error creating/writing to the file. See e.what() for details.
  */
-void createFile(const char* path, void* mem, size_t memLen);
+void createFile(const char* path, void* mem, size_t memLen, mode_t mode = 0644);
+
+/**
+ * @brief Creates a file with random data.
+ *
+ * @param path The path of the file to create.
+ * If a file already exists at this path, it will be overwritten.
+ * @param maxRandLen The maximum length of the file in bytes.
+ * By default this is set to 4096, meaning the resulting file will be between 0 and 4096 bytes in length.
+ * @param mode The permissions to give the file.
+ * By default, this is set to 0644, which gives read+write permission to the user and read only permission to others.
+ *
+ * @exception std::runtime_error There was an error creating/writing to the file. See e.what() for details.
+ */
+void createFile(const char* path, size_t maxRandLen = 4096, mode_t mode = 0644);
 
 /**
  * @brief Compares the contents of two files in memcmp() fashion.
@@ -150,13 +166,14 @@ public:
 	 *        basePath/excl/exfile{01..20}.txt (0666)
 	 *        basePath/excl/exfile_noacc.txt   (0000)
 	 *    basePath/noacc (0000)
+	 *
 	 */
 	TestEnvironment& setupFullEnvironment(const char* basePath);
 
 	/**
 	 * @brief Returns the list of files in the TestEnvironment.
 	 */
-	std::vector<std::string> AT_CONST getFiles();
+	const std::vector<std::string>& AT_CONST getFiles();
 
 private:
 	struct TestEnvironmentImpl;
@@ -166,20 +183,6 @@ private:
 	 * This is used so we can #include fewer dependencies and speed up compilation times.
 	 */
 	std::unique_ptr<TestEnvironmentImpl> impl;
-
-	/**
-	 * @brief Creates a directory within the test environment and fills it with test files.
-	 * These files will be created with the following format:
-	 * `path/{filePrefix}_{number}`
-	 * The number is 1-indexed.
-	 *
-	 * @param path The directory to create.
-	 * If this directory's parent does not exist, this function will fail.
-	 *
-	 * @param nFiles The number of files to create.
-	 * @param filePrefix The prefix to append to each file.
-	 */
-	TestEnvironment& createTestDirectory(const char* path, const char* filePrefix, int nFiles = 20, size_t maxLen = 4096);
 };
 
 /**
@@ -191,13 +194,14 @@ private:
 void fillMemory(void* mem, size_t len);
 
 namespace rand{
+
 /**
-* @brief Seeds the internal random number generator.
-* A consistent random number generator is needed to generate the same numbers across all platforms.
-*
-* @param seed The seed to use.
-* All subsequent numbers generated will be based on this seed.
-*/
+ * @brief Seeds the internal random number generator.
+ * A consistent random number generator is needed to generate the same numbers across all platforms.
+ *
+ * @param seed The seed to use.
+ * All subsequent numbers generated will be based on this seed.
+ */
 void seed(unsigned seed);
 
 /**

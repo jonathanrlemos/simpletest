@@ -35,7 +35,7 @@ static volatile sig_atomic_t s_exit = 0;
 /**
  * @brief Stores the execution context of the function to longjmp() to.
  */
-static volatile jmp_buf s_jmpbuf;
+static jmp_buf s_jmpbuf;
 
 /**
  * @brief The signals we should capture.
@@ -120,6 +120,7 @@ SignalHandler::SignalHandler(SignalHandler&& other){
 SignalHandler& SignalHandler::operator=(SignalHandler&& other){
 	// ditto above
 	(void)other;
+	return *this;
 }
 
 SignalHandler::~SignalHandler(){
