@@ -214,23 +214,19 @@ TestEnvironment& TestEnvironment::createTestDirectory(const char* path, const ch
 	return *this;
 }
 
-TestEnvironment setupBasicEnvironment(const char* basePath){
-	TestEnvironment te;
-
+TestEnvironment& TestEnvironment::setupBasicEnvironment(const char* basePath){
 	rand::seed(0);
 
-	te.createTestDirectory(basePath, "file");
-	return te;
+	createTestDirectory(basePath, "file");
+	return *this;
 }
 
-TestEnvironment setupFullEnvironment(const char* basePath){
-	TestEnvironment te;
-
+TestEnvironment& TestEnvironment::setupFullEnvironment(const char* basePath){
 	if (mkdir(basePath, 0755) != 0){
 		throw std::runtime_error("Failed to create directory " + std::string(basePath) + '(' + std::strerror(errno) + ')');
 	}
 
-	te.createTestDirectory(MAKE_PATH(basePath, "dir1").c_str(), "dir1").createTestDirectory(MAKE_PATH(basePath, "dir2").c_str(), "dir2").createTestDirectory(MAKE_PATH(basePath, "excl").c_str(), "excl");
+	createTestDirectory(MAKE_PATH(basePath, "dir1").c_str(), "dir1").createTestDirectory(MAKE_PATH(basePath, "dir2").c_str(), "dir2").createTestDirectory(MAKE_PATH(basePath, "excl").c_str(), "excl");
 
 	{
 		std::string file = MAKE_PATH(basePath, "excl", "excl_noacc.txt");
@@ -245,8 +241,7 @@ TestEnvironment setupFullEnvironment(const char* basePath){
 		}
 	}
 
-
-	return te;
+	return *this;
 }
 
 }

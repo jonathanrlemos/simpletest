@@ -87,6 +87,12 @@ bool fileExists(const char* file);
 class TestEnvironment{
 public:
 	/**
+	 * @brief Constructor for TestEnvironment.
+	 * By default this does not make any files.
+	 */
+	TestEnvironment();
+
+	/**
 	 * @brief Move constructor for TestEnvironment.
 	 */
 	TestEnvironment(TestEnvironment&& other);
@@ -130,7 +136,7 @@ public:
 	 *
 	 * @exception std::runtime_error Failed to create the directory or its subfiles. See e.what() for details.
 	 */
-	friend TestEnvironment setupBasicEnvironment(const char* basePath);
+	TestEnvironment& setupBasicEnvironment(const char* basePath);
 
 	/**
 	 * @brief Sets up a test environment with the following structure:<br>
@@ -145,12 +151,12 @@ public:
 	 *        basePath/excl/exfile_noacc.txt   (0000)
 	 *    basePath/noacc (0000)
 	 */
-	friend TestEnvironment setupFullEnvironment(const char* basePath);
+	TestEnvironment& setupFullEnvironment(const char* basePath);
 
 	/**
 	 * @brief Returns the list of files in the TestEnvironment.
 	 */
-	std::vector<std::string> getFiles();
+	std::vector<std::string> AT_CONST getFiles();
 
 private:
 	struct TestEnvironmentImpl;
@@ -159,7 +165,7 @@ private:
 	 * This unique_ptr contains the private variables of the TestEnvironment class.
 	 * This is used so we can #include fewer dependencies and speed up compilation times.
 	 */
-	 std::unique_ptr<TestEnvironmentImpl> impl;
+	std::unique_ptr<TestEnvironmentImpl> impl;
 
 	/**
 	 * @brief Creates a directory within the test environment and fills it with test files.
@@ -174,11 +180,6 @@ private:
 	 * @param filePrefix The prefix to append to each file.
 	 */
 	TestEnvironment& createTestDirectory(const char* path, const char* filePrefix, int nFiles = 20, size_t maxLen = 4096);
-
-	/**
-	 * @brief Private constructor to prevent direct instantiation of TestEnvironment objects.
-	 */
-	TestEnvironment();
 };
 
 /**
@@ -191,12 +192,12 @@ void fillMemory(void* mem, size_t len);
 
 namespace rand{
 /**
- * @brief Seeds the internal random number generator.
- * A consistent random number generator is needed to generate the same numbers across all platforms.
- *
- * @param seed The seed to use.
- * All subsequent numbers generated will be based on this seed.
- */
+* @brief Seeds the internal random number generator.
+* A consistent random number generator is needed to generate the same numbers across all platforms.
+*
+* @param seed The seed to use.
+* All subsequent numbers generated will be based on this seed.
+*/
 void seed(unsigned seed);
 
 /**
