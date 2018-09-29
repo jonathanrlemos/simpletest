@@ -315,7 +315,7 @@ TestEnvironment& TestEnvironment::setupFullEnvironment(const char* basePath){
 	return *this;
 }
 
-const std::vector<std::string>& TestEnvironment::getFiles(){
+const std::vector<std::string>& TestEnvironment::getFiles() const{
 	return impl->files;
 }
 
@@ -328,7 +328,7 @@ void fillMemory(void* mem, size_t len){
 
 namespace rand{
 
-static unsigned randSeed = 0;
+static thread_local unsigned randSeed = 0;
 
 void seed(unsigned seed){
 	randSeed = seed;

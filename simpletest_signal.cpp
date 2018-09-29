@@ -49,7 +49,7 @@ static const sig_atomic_t signals[] = {SIGINT, SIGABRT, SIGSEGV, SIGTERM};
 
 SignalException::SignalException(sig_atomic_t signo): std::runtime_error(SignalHandler::signalToString(signo)), signo(signo){}
 
-sig_atomic_t SignalException::getSignal(){
+sig_atomic_t SignalException::getSignal() const{
 	return signo;
 }
 

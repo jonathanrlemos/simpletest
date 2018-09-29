@@ -30,7 +30,7 @@ public:
 	/**
 	 * @brief Gets the signal code of this exception.
 	 */
-	sig_atomic_t getSignal();
+	sig_atomic_t getSignal() const;
 
 private:
 	/**

@@ -173,7 +173,7 @@ public:
 	/**
 	 * @brief Returns the list of files in the TestEnvironment.
 	 */
-	const std::vector<std::string>& AT_CONST getFiles();
+	const std::vector<std::string>& AT_CONST getFiles() const;
 
 private:
 	struct TestEnvironmentImpl;
@@ -198,6 +198,7 @@ namespace rand{
 /**
  * @brief Seeds the internal random number generator.
  * A consistent random number generator is needed to generate the same numbers across all platforms.
+ * The default seed is 0.
  *
  * @param seed The seed to use.
  * All subsequent numbers generated will be based on this seed.
@@ -208,6 +209,7 @@ void seed(unsigned seed);
  * @brief Returns the next random number in the sequence.
  */
 int next();
+
 }
 
 }
