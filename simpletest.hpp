@@ -40,8 +40,8 @@ public:
 #define ASSERT(assertion)\
 	/* silences __iocapt unused warning */\
 	(void)__iocapt;\
-	/* activates the signal handler if it wasn't already activated through THROW_INSTANTLY_ON_SIGNAL() */\
-	ActivateSignalHandler(__sighand);\
+	/* silences __sighand unused warning */\
+	(void)__sighand;\
 	if (!(assertion)){\
 		throw simpletest::FailedAssertion(#assertion);\
 	}\
@@ -71,8 +71,8 @@ public:
  * @exception FailedExpectation Thrown if the last line on stdout/stderr does not match the expectation.
  */
 #define EXPECT(expectation)\
-	/* activates the signal handler if it wasn't already activated through THROW_INSTANTLY_ON_SIGNAL() */\
-	ActivateSignalHandler(__sighand);\
+	/* silences unused __sighand warning */\
+	(void)__sighand;\
 	simpletest::__expect(expectation, __iocapt)
 
 /**
@@ -92,9 +92,9 @@ void __expect(const char* str, simpletest::IOCapturer& __iocapt);
  * @param line The line to send.
  */
 #define SEND(line)\
-	/* activates the signal handler if it wasn't already activated through THROW_INSTANTLY_ON_SIGNAL() */\
-	ActivateSignalHandler(__sighand);\
-	__iocapt.sendToStdin(line)
+	/* silences unused __sighand warning */\
+(void)__sighand;\
+__iocapt.sendToStdin(line)
 
 /**
  * @brief Do not call this function directly. Use the UNIT_TEST macro.
@@ -141,10 +141,9 @@ public:
 	void str(simpletest::IOCapturer& __iocapt, simpletest::SignalHandler& __sighand)
 
 /**
- * @brief Throws an exception instantly when a signal is thrown.
- * ASSERT(), EXPECT(), SEND(), TEST_PRINTF(), and SET_CLEANUP() automatically call this, so it is only necessary if the signal-throwing code is called before any of these.
+ * @brief Throws an exception instead of crashing the program when a signal is thrown.
  */
-#define THROW_INSTANTLY_ON_SIGNAL()\
+#define HANDLE_SIGNALS()\
 	/* silences __iocapt unused warning */\
 	(void)__iocapt;\
 	ActivateSignalHandler(__sighand)
@@ -181,10 +180,10 @@ int __executetests(int argc, char** argv);
  */
 #define TEST_PRINTF(...)\
 	/* silences __iocapt unused warning */\
-	(void)__iocapt;\
-	/* activates the signal handler if it wasn't already activated through THROW_INSTANTLY_ON_SIGNAL() */\
-	ActivateSignalHandler(__sighand);\
-	__iocapt.printToScreen(__VA_ARGS__)
+(void)__iocapt;\
+/* activates the signal handler if it wasn't already activated through THROW_INSTANTLY_ON_SIGNAL() */\
+ActivateSignalHandler(__sighand);\
+__iocapt.printToScreen(__VA_ARGS__)
 
 /**
  * @brief A dummy class used for cleanup purposes.
@@ -225,8 +224,8 @@ private:
 #define SET_CLEANUP(lambda)\
 	/* silences __iocapt unused warning */\
 	(void)__iocapt;\
-	/* activates the signal handler if it wasn't already activated through THROW_INSTANTLY_ON_SIGNAL() */\
-	ActivateSignalHandler(__sighand);\
+	/* silences __sighand unused warning */\
+	(void)__sighand\
 	__cleanupdummy __cld(lambda);\
 	/* requires semicolon */\
 	(void)__cld

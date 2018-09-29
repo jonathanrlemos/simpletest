@@ -229,7 +229,7 @@ int cmpFile(const char* file1, const char* file2){
 }
 
 int cmpFile(const char* file, void* mem, size_t memLen){
-	char c1;
+	char c1 = 0;
 	unsigned char* ucmem = (unsigned char*)mem;
 	size_t memPtr = 0;
 	std::ifstream ifs;

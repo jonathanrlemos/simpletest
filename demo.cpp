@@ -7,7 +7,9 @@
  */
 
 #include "simpletest.hpp"
+#include "simpletest_ext.hpp"
 #include <iostream>
+#include <fstream>
 
 UNIT_TEST(PASS_arithmetic1){
 	ASSERT(2 + 2 == 4);
@@ -17,15 +19,6 @@ UNIT_TEST(PASS_arithmetic2){
 	ASSERT(2 * 2 == 4);
 	ASSERT(2 * 2 * 2 == 8);
 	ASSERT(4 >> 1 == 2);
-}
-
-UNIT_TEST(FAIL_arithmetic1){
-	ASSERT(2 + 1 == 4);
-}
-
-UNIT_TEST(FAIL_arithmetic2){
-	ASSERT(2 + 2 == 4);
-	ASSERT(2 + 1 == 4);
 }
 
 UNIT_TEST(PASS_expect1){
@@ -45,22 +38,6 @@ UNIT_TEST(PASS_expect3){
 
 UNIT_TEST(PASS_expect4){
 	std::cerr << "expecterr" << std::endl;
-	EXPECT("expecterr");
-}
-
-UNIT_TEST(FAIL_expect1){
-	EXPECT("failme");
-}
-
-UNIT_TEST(FAIL_expect2){
-	std::cout << "failme" << std::endl;
-	std::cout << "hunter2" << std::endl;
-	EXPECT("failme");
-}
-
-UNIT_TEST(FAIL_expect3){
-	std::cerr << "expecterr" << std::endl;
-	std::cout << "expectout" << std::endl;
 	EXPECT("expecterr");
 }
 
@@ -85,6 +62,37 @@ UNIT_TEST(PASS_send2){
 	EXPECT("testprompt:");
 }
 
+UNIT_TEST(PASS_test_printf){
+	TEST_PRINTF("qqq\n");
+	std::cout << "IF THIS SHOWS, IT IS A BUG" << std::endl;
+	TEST_PRINTF("test printf %d\n", 123);
+}
+
+UNIT_TEST(FAIL_arithmetic1){
+	ASSERT(2 + 1 == 4);
+}
+
+UNIT_TEST(FAIL_arithmetic2){
+	ASSERT(2 + 2 == 4);
+	ASSERT(2 + 1 == 4);
+}
+
+UNIT_TEST(FAIL_expect1){
+	EXPECT("failme");
+}
+
+UNIT_TEST(FAIL_expect2){
+	std::cout << "failme" << std::endl;
+	std::cout << "hunter2" << std::endl;
+	EXPECT("failme");
+}
+
+UNIT_TEST(FAIL_expect3){
+	std::cerr << "expecterr" << std::endl;
+	std::cout << "expectout" << std::endl;
+	EXPECT("expecterr");
+}
+
 UNIT_TEST(FAIL_send1){
 	std::string s;
 
@@ -104,14 +112,8 @@ UNIT_TEST(FAIL_send2){
 	EXPECT("failme");
 }
 
-UNIT_TEST(PASS_test_printf){
-	TEST_PRINTF("qqq\n");
-	std::cout << "IF THIS SHOWS, IT IS A BUG" << std::endl;
-	TEST_PRINTF("test printf %d\n", 123);
-}
-
 UNIT_TEST(FAIL_segfault){
-	THROW_INSTANTLY_ON_SIGNAL();
+	HANDLE_SIGNALS();
 	int* q = NULL;
 	*q = 0xF00BA4;
 }

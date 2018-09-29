@@ -152,5 +152,19 @@ The SEND() macro sends input to stdin as it it was typed through the keyboard.
 A newline will automatically be appended if one is not present in the input string. However, this newline is not reflected in stdout.
 Note that stdin must be empty before SEND() can be used, so it will fail if SEND() is used twice before stdin is read.
 
+### Handling segmentation faults
+
+Signals can be caught like follows:
+```C++
+UNIT_TEST(segfault){
+	HANDLE_SIGNALS();
+	int* ptr = NULL;
+	*ptr = 1234; // segmentation fault here
+}
+```
+
+The HANDLE\_SIGNALS() macro will report when signals such as SIGSEGV occur instead of letting them crash the program.
+Note that is this macro must be placed before any signal-throwing code or it will have no effect.
+
 ## License
 This project is licensed under the MIT License. See [LICENSE.txt](LICENSE.txt) for details.
